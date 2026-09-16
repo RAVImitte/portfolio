@@ -4,3 +4,8 @@ dist
 *.local
 .vite
 .verify
+.vercel
+
+# Root-level resume PDFs (canonical copies live in public/resumes/)
+MitteRaviShankar.pdf
+Ravi Mitte.pdf
