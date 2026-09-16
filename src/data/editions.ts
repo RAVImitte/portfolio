@@ -1,5 +1,5 @@
 import type { Role } from "./role";
-import type { SkillBlock } from "./about";
+import type { SkillBlock } from "./types";
 
 export type EditionCopy = {
   documentTitle: string;

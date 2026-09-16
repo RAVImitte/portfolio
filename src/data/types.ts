@@ -1,5 +1,10 @@
 import type { Role } from "./role";
 
+export type SkillBlock = {
+  label: string;
+  items: string[];
+};
+
 export type Metric = {
   value: string;
   numeric?: number;

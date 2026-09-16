@@ -5,14 +5,12 @@ import { MotionRoot } from "./motion/MotionRoot";
 import { Home } from "./pages/Home";
 import { ProjectsIndex } from "./pages/ProjectsIndex";
 import { About } from "./pages/About";
-import {
-  DermaAssist,
-  FindMyMobile,
-  LivingLabs,
-  MockServer,
-  WearableIntelligence,
-  ZeroMiles,
-} from "./pages/cases";
+import { LivingLabs } from "./pages/cases/LivingLabs";
+import { FindMyMobile } from "./pages/cases/FindMyMobile";
+import { WearableIntelligence } from "./pages/cases/WearableIntelligence";
+import { ZeroMiles } from "./pages/cases/ZeroMiles";
+import { DermaAssist } from "./pages/cases/DermaAssist";
+import { MockServer } from "./pages/cases/MockServer";
 import { parseRole, ROLE_QUERY, withRoleParam } from "./data/role";
 import { useRole } from "./role/RoleContext";
 
