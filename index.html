@@ -1,0 +1,100 @@
+<!doctype html>
+<html lang="en" data-theme="light" data-live="lattice">
+  <head>
+    <meta charset="UTF-8" />
+    <link rel="icon" type="image/svg+xml" href="/favicon.svg" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <meta
+      name="description"
+      content="Ravi Shankar Mitte — Senior Software Engineer at Samsung. Production backends and Android / Wear OS / Android XR, plus independent full-stack work."
+    />
+    <meta property="og:title" content="Ravi Shankar Mitte" />
+    <meta property="og:type" content="website" />
+    <meta property="og:url" content="%SITE_ORIGIN%/" />
+    <meta property="og:site_name" content="Ravi Shankar Mitte" />
+    <meta
+      property="og:description"
+      content="Senior Software Engineer. Systems and devices — Java, Spring, GraphQL, Android, Wear OS, XR."
+    />
+    <meta property="og:image" content="%SITE_ORIGIN%/og-backend.png" />
+    <meta property="og:image:width" content="1200" />
+    <meta property="og:image:height" content="630" />
+    <meta property="og:image:alt" content="Ravi Shankar Mitte — Senior Software Engineer" />
+    <meta name="twitter:card" content="summary_large_image" />
+    <meta name="twitter:title" content="Ravi Shankar Mitte — Senior Software Engineer" />
+    <meta name="twitter:description" content="Systems and devices — Java, Spring, GraphQL, Android, Wear OS, XR." />
+    <meta name="twitter:image" content="%SITE_ORIGIN%/og-backend.png" />
+    <meta name="robots" content="index,follow" />
+    <link rel="canonical" href="%SITE_ORIGIN%/" />
+    <link rel="preconnect" href="https://fonts.googleapis.com" />
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
+    <link
+      href="https://fonts.googleapis.com/css2?family=Fraunces:ital,opsz,wght@0,9..144,400;0,9..144,500;0,9..144,600;1,9..144,400;1,9..144,500&family=IBM+Plex+Mono:wght@400;500&family=IBM+Plex+Sans:ital,wght@0,400;0,500;0,600;1,400&display=swap"
+      rel="stylesheet"
+    />
+    <title>Ravi Shankar Mitte — Senior Software Engineer</title>
+    <script type="application/ld+json">
+      {
+        "@context": "https://schema.org",
+        "@type": "Person",
+        "name": "Ravi Shankar Mitte",
+        "alternateName": "Ravi Mitte",
+        "jobTitle": "Senior Software Engineer",
+        "url": "%SITE_ORIGIN%/",
+        "image": "%SITE_ORIGIN%/og-backend.png",
+        "worksFor": { "@type": "Organization", "name": "Samsung" },
+        "address": { "@type": "PostalAddress", "addressLocality": "Bangalore", "addressCountry": "IN" },
+        "email": "mailto:ravimitte616@gmail.com",
+        "sameAs": [
+          "https://github.com/RAVImitte",
+          "https://linkedin.com/in/ravimitte",
+          "https://huggingface.co/ravimitte"
+        ],
+        "knowsAbout": [
+          "Java", "Spring Boot", "GraphQL", "PostgreSQL", "AWS", "Microservices",
+          "Kotlin", "Android", "Wear OS", "Android XR"
+        ]
+      }
+    </script>
+    <script>
+      // Resolve the theme before first paint so the page never flashes the
+      // wrong one. Mirrors src/theme/theme.ts; keep the two in step.
+      (function () {
+        try {
+          var stored = localStorage.getItem("rm-theme");
+          if (stored === "light" || stored === "dark") {
+            document.documentElement.dataset.theme = stored;
+            return;
+          }
+          var mq = window.matchMedia && window.matchMedia("(prefers-color-scheme: dark)");
+          document.documentElement.dataset.theme = mq && mq.matches ? "dark" : "light";
+        } catch (e) {
+          document.documentElement.dataset.theme = "light";
+        }
+      })();
+      // Randomize the live background across the four active effects unless a
+      // deliberate choice is already persisted. Mirrors DEFAULTS in
+      // src/design/preview.ts; keep the two in step.
+      (function () {
+        var pool = ["gossip", "lattice", "halftone", "shards"];
+        var pick = pool[Math.floor(Math.random() * pool.length)];
+        try {
+          var raw = localStorage.getItem("rm-design-preview");
+          if (raw) {
+            var stored = JSON.parse(raw);
+            var v = stored && stored.live;
+            if (v === "gossip" || v === "lattice" || v === "halftone" || v === "shards" || v === "off") {
+              document.documentElement.dataset.live = v;
+              return;
+            }
+          }
+        } catch (e) { /* private mode / bad JSON — fall through to random */ }
+        document.documentElement.dataset.live = pick;
+      })();
+    </script>
+  </head>
+  <body>
+    <div id="root"></div>
+    <script type="module" src="/src/main.tsx"></script>
+  </body>
+</html>

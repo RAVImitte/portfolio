@@ -1,0 +1,340 @@
+/* ============================================================================
+   Depth, signature diagrams, ambient and live layers.
+   Loaded after styles.css. Light/dark comes from [data-theme] on <html>;
+   depth and the ambient field are settled and always on, guarded only by
+   prefers-reduced-motion. [data-live] remains switchable in the preview.
+   ========================================================================= */
+
+/* ── Ground ────────────────────────────────────────────────────────────────
+   The page gets a tonal floor rather than one flat fill, so the canvas reads
+   as a surface the content sits on instead of a background colour.          */
+/* The ground lives on the root element, not on <body>. A negative-z-index
+   child paints above the root's background but below <body>'s, so an opaque
+   body background would bury the ambient layer. */
+:root {
+  background:linear-gradient(180deg, var(--paper) 0%, var(--paper) 52%, var(--paper-deep) 100%) no-repeat fixed;
+}
+body { background:transparent }
+.site-footer { position:relative; box-shadow:0 -40px 80px -44px rgb(16 24 39 / .3) }
+
+/* ── Raised surfaces ──────────────────────────────────────────────────────── */
+.project-item {
+  background:var(--surface);
+  box-shadow:var(--lift-1);
+  transition:transform .3s cubic-bezier(.2,.7,.2,1), box-shadow .3s cubic-bezier(.2,.7,.2,1);
+}
+.project-item:hover,
+.project-item:focus-within { transform:translateY(-3px); box-shadow:var(--lift-2) }
+
+/* A card that would be left alone on its row now spans it, and puts its
+   diagram beside the text instead of under it. IndexList decides which cards
+   these are — see wideCards(). */
+.project-item.is-wide { grid-column:1/-1 }
+.project-item.is-wide:has(.signature) {
+  display:grid;
+  grid-template-columns:minmax(0,1fr) minmax(300px,.85fr);
+  gap:36px;
+  align-items:center;
+}
+.project-item.is-wide:has(.signature) .signature { margin-top:0; border-top:0; padding-top:0 }
+
+/* ── Hero schematic: layered planes ───────────────────────────────────────── */
+.sx-stage { display:grid; margin:24px 0 12px }
+.sx-layer { grid-area:1/1; display:block; width:100%; overflow:visible }
+
+.schematic-field {
+  box-shadow:var(--lift-field);
+  transform:perspective(1500px)
+            rotateY(calc(var(--px, 0) * 2.2deg))
+            rotateX(calc(var(--py, 0) * -1.6deg));
+  transition:transform .55s cubic-bezier(.2,.7,.2,1), box-shadow .3s;
+}
+/* Pointer parallax uses the independent `translate` property so the
+   scroll-driven `transform` keyframes below can compose with it rather than
+   overwrite it. */
+.sx-layer { transition:translate .55s cubic-bezier(.2,.7,.2,1); will-change:translate }
+.sx-layer--back  { translate:calc(var(--px, 0) * -7px) calc(var(--py, 0) * -5px) }
+.sx-layer--mid   { translate:calc(var(--px, 0) * -2px) calc(var(--py, 0) * -1.5px) }
+.sx-layer--front { translate:calc(var(--px, 0) * 6px)  calc(var(--py, 0) * 4px) }
+
+/* Scroll-driven differential drift. Native timeline — no library, runs off the
+   main thread, and the @supports guard leaves Firefox stable (still behind a
+   flag as of 2026) with the static composition the argument depends on. */
+@supports (animation-timeline: view()) {
+  @media (prefers-reduced-motion: no-preference) {
+    .sx-layer {
+      animation:sx-drift linear both;
+      animation-timeline:view();
+      animation-range:cover 0% cover 100%;
+    }
+    .sx-layer--back  { --sx-drift:12px }
+    .sx-layer--mid   { --sx-drift:4px }
+    .sx-layer--front { --sx-drift:-7px }
+  }
+}
+@keyframes sx-drift {
+  from { transform:translateY(var(--sx-drift, 0)) }
+  to   { transform:translateY(calc(var(--sx-drift, 0) * -1)) }
+}
+
+
+/* ── Signature diagrams (one shape per project) ───────────────────────────── */
+.signature { margin-top:22px; border-top:1px solid var(--line); padding-top:16px }
+.signature-label {
+  font:12px var(--font-mono); text-transform:uppercase; letter-spacing:.06em;
+  color:var(--project-accent);
+}
+.signature-plate {
+  background:var(--surface-sunk); border:1px solid var(--line);
+  border-radius:8px; padding:14px 16px; margin:12px 0 10px;
+}
+.signature-plate svg { display:block; width:100% }
+.signature-note { color:var(--muted); font-size:13px; line-height:1.5 }
+
+.sig-node { fill:var(--surface); stroke:var(--project-accent); stroke-width:1.4 }
+.sig-node--focus { fill:var(--project-tint); stroke-width:1.9 }
+.sig-edge { fill:none; stroke:var(--project-accent); stroke-width:1.6 }
+.sig-edge--blocked { stroke-dasharray:4 4; opacity:.5 }
+.sig-edge--return { stroke-dasharray:3 4; opacity:.55 }
+.sig-text { fill:var(--ink); font:13px var(--font-sans) }
+.sig-micro { fill:var(--muted); font:11px var(--font-mono) }
+.sig-micro--blocked { fill:var(--project-accent) }
+.sig-axis { fill:none; stroke:var(--line-strong); stroke-width:1.2 }
+.sig-tick { fill:var(--project-accent) }
+.sig-tick--check { fill:var(--project-accent); opacity:.38 }
+.sig-ragged { fill:none; stroke:var(--muted); stroke-width:2; stroke-linecap:round; opacity:.55 }
+.sig-fill { fill:var(--project-accent) }
+.sig-cloud { fill:var(--surface-sunk); stroke:var(--muted); stroke-width:1.2; opacity:.5 }
+.sig-cloud-strike { fill:none; stroke:var(--muted); stroke-width:1.8; stroke-linecap:round; opacity:.7 }
+.sig-forbid { fill:none; stroke:var(--muted); stroke-width:1.6; stroke-linecap:round; opacity:.7 }
+.sig-radio { fill:none; stroke:var(--project-accent); stroke-width:1.4; stroke-linecap:round; opacity:.75 }
+.sig-radio-dot { fill:var(--project-accent) }
+.sig-link-ring { fill:none; stroke:var(--muted); stroke-width:1.4; opacity:.7 }
+.sig-link-bar { fill:none; stroke:var(--muted); stroke-width:1.4; stroke-linecap:round; opacity:.7 }
+
+/* ── Contention module ────────────────────────────────────────────────────── */
+.contention { padding:0 0 96px }
+.contention-head { max-width:62ch; border-top:1px solid var(--ink); padding-top:24px }
+.contention-head h2 { font-size:clamp(30px,3.2vw,42px); font-weight:500; margin:12px 0 16px }
+.contention-dek { color:var(--muted); font-size:17px; line-height:1.65 }
+
+.contention-stage {
+  display:grid; grid-template-columns:minmax(0,1fr) minmax(0,1.05fr);
+  gap:32px; align-items:center;
+  background:var(--surface); border:1px solid var(--line); border-radius:12px;
+  box-shadow:var(--lift-1); padding:28px; margin:32px 0 28px;
+}
+.contention-lanes { display:grid; gap:14px }
+.lane {
+  display:flex; flex-direction:column; gap:5px;
+  border:1px solid var(--line); border-left:3px solid var(--line-strong);
+  border-radius:0 8px 8px 0; padding:14px 16px; background:var(--surface-sunk);
+  transition:border-color .25s, background .25s, transform .25s;
+}
+.lane-id { font:12px var(--font-mono); text-transform:uppercase; letter-spacing:.06em; color:var(--muted) }
+.lane-state { font-size:16px; font-weight:500 }
+.lane--holds { border-left-color:var(--blue); background:var(--tint) }
+.lane--waits { border-left-color:#a86a00; background:var(--surface-sunk) }
+.lane--waits .lane-state { color:#8a5600 }
+.lane--done { border-left-color:#007969; background:var(--surface-sunk) }
+.lane--done .lane-state { color:#00675a }
+.lane--closed { border-left-color:var(--line-strong); opacity:.75 }
+
+.token-row {
+  display:grid; gap:8px; justify-items:center; text-align:center;
+  background:var(--field); color:var(--field-ink);
+  border-radius:10px; padding:28px 24px; border-top:3px solid var(--line-strong);
+  transition:border-color .25s;
+}
+.token-label { font:12px var(--font-mono); text-transform:uppercase; letter-spacing:.07em; color:var(--field-muted) }
+.token-status { font:500 30px var(--font-sans); letter-spacing:-.03em }
+.token-holder { font:13px var(--font-mono); color:var(--field-muted) }
+.token-row--holds { border-top-color:var(--signal) }
+.token-row--holds .token-status { color:var(--signal) }
+.token-row--done { border-top-color:var(--signal) }
+.token-row--done .token-status { color:var(--signal) }
+
+.contention-steps { list-style:none; margin:0; padding:0; display:grid; gap:2px; max-width:80ch }
+.contention-steps li {
+  display:grid; grid-template-columns:34px minmax(0,1fr); gap:14px;
+  padding:12px 14px; border-radius:8px;
+  transition:background .25s, box-shadow .25s;
+}
+.contention-steps li.is-current { background:var(--tint); box-shadow:inset 2px 0 0 var(--blue) }
+.contention-step-no { font:13px var(--font-mono); color:var(--muted); padding-top:2px }
+.contention-steps li.is-past .contention-step-no,
+.contention-steps li.is-current .contention-step-no { color:var(--blue) }
+.contention-steps strong { display:block; font-size:16px; font-weight:600; color:var(--muted) }
+.contention-steps li.is-past strong { color:var(--ink) }
+.contention-steps li.is-current strong { color:var(--ink) }
+.contention-step-log { display:block; color:var(--muted); font-size:14px; line-height:1.55; margin-top:3px }
+
+.contention-controls { display:flex; flex-wrap:wrap; align-items:center; gap:14px 20px; margin-top:24px }
+.contention-controls .btn:disabled { opacity:.45; cursor:not-allowed }
+.contention-note { color:var(--muted); font-size:13px }
+
+/* ── Ambient field ────────────────────────────────────────────────────────── */
+.ambient {
+  display:block; position:fixed; inset:0; z-index:-1; overflow:hidden; pointer-events:none;
+  mask-image:linear-gradient(180deg, #000 0%, #000 60%, transparent 100%);
+}
+.ambient-blob { position:absolute; border-radius:50%; filter:blur(80px); opacity:.3; will-change:transform }
+.ambient-blob--1 { width:52vw; height:52vw; left:-14vw; top:-18vw; background:var(--blue); animation:amb-1 34s ease-in-out infinite alternate }
+.ambient-blob--2 { width:48vw; height:48vw; right:-12vw; top:14vh; background:var(--signal); opacity:.26; animation:amb-2 41s ease-in-out infinite alternate }
+.ambient-blob--3 { width:42vw; height:42vw; left:20vw; bottom:-18vw; background:#e08a2e; opacity:.18; animation:amb-3 47s ease-in-out infinite alternate }
+.ambient-grid {
+  position:absolute; inset:0;
+  background-image:linear-gradient(var(--line-strong) 1px, transparent 1px), linear-gradient(90deg, var(--line-strong) 1px, transparent 1px);
+  background-size:72px 72px; opacity:.5;
+  mask-image:radial-gradient(120% 90% at 50% 0%, #000 0%, transparent 72%);
+}
+@keyframes amb-1 { to { transform:translate3d(10vw, 8vh, 0) scale(1.15) } }
+@keyframes amb-2 { to { transform:translate3d(-12vw, -10vh, 0) scale(1.2) } }
+@keyframes amb-3 { to { transform:translate3d(8vw, -12vh, 0) scale(1.1) } }
+
+/* ── Dark canvas fixups ───────────────────────────────────────────────────── */
+:root[data-theme=dark] .brand-mark,
+:root[data-theme=dark] .btn-solid { color:#0b0f16 }
+:root[data-theme=dark] .btn-solid:hover { color:#0b0f16 }
+:root[data-theme=dark] .project-item { --project-accent:#7ea2ff; --project-tint:#182038 }
+:root[data-theme=dark] .project-item--living-labs { --project-accent:#5fbe6f; --project-tint:#16281c }
+:root[data-theme=dark] .project-item--zero-miles { --project-accent:#ff7aab; --project-tint:#2c1524 }
+:root[data-theme=dark] .project-item--wearable-intelligence { --project-accent:#b18cff; --project-tint:#221a38 }
+:root[data-theme=dark] .project-item--derma-assist { --project-accent:#e8a05a; --project-tint:#2e2013 }
+:root[data-theme=dark] .project-item--dynamic-mock-server { --project-accent:#4fd3bb; --project-tint:#102b28 }
+:root[data-theme=dark] .project-item--find-my-mobile { --project-accent:#5cb3e5; --project-tint:#13293c }
+:root[data-theme=dark] .lane--waits .lane-state { color:#e2a955 }
+:root[data-theme=dark] .lane--done .lane-state { color:#4fd3bb }
+:root[data-theme=dark] .lane--waits { border-left-color:#e2a955 }
+:root[data-theme=dark] .lane--done { border-left-color:#4fd3bb }
+:root[data-theme=dark] .token-row { border:1px solid var(--line) }
+:root[data-theme=dark] .ambient-grid { opacity:.6 }
+
+@media (max-width:1000px) {
+  .contention-stage { grid-template-columns:1fr; gap:22px }
+  .project-item.is-wide:has(.signature) { grid-template-columns:1fr; gap:0 }
+  .project-item.is-wide:has(.signature) .signature {
+    margin-top:22px; border-top:1px solid var(--line); padding-top:16px;
+  }
+}
+@media (max-width:760px) {
+  .contention { padding-bottom:64px }
+  .contention-stage { padding:20px }
+  .contention-steps li { grid-template-columns:28px minmax(0,1fr); gap:10px; padding:10px 8px }
+}
+@media (prefers-reduced-motion:reduce) {
+  .ambient-blob { animation:none }
+  .sx-layer { animation:none; translate:none }
+  .schematic-field { transform:none }
+}
+@media print { .ambient { display:none!important } }
+
+/* ============================================================================
+   Theme toggle, pointer treatment, live field, page transitions.
+   ========================================================================= */
+
+/* ── Live background field ────────────────────────────────────────────────── */
+:root { --live-ink:#2155e8; --live-pulse:#0f8f7c }
+:root[data-theme=dark] { --live-ink:#7ea2ff; --live-pulse:#9de5d5 }
+.live-field {
+  position:fixed; inset:0; z-index:-1; pointer-events:none;
+  width:100%; height:100%;
+}
+/* Ambient gradient sits behind the node field. */
+.ambient { z-index:-2 }
+
+/* ── Theme toggle ─────────────────────────────────────────────────────────── */
+.theme-toggle {
+  display:inline-flex; align-items:center; justify-content:center;
+  width:56px; height:32px; padding:0; border:0; background:none;
+  border-radius:999px; flex:none;
+}
+.theme-toggle-track {
+  position:relative; display:block; width:56px; height:32px; border-radius:999px;
+  background:var(--surface-sunk); border:1px solid var(--line);
+  transition:background .3s, border-color .3s;
+}
+.theme-toggle-thumb {
+  position:absolute; top:3px; left:3px; width:24px; height:24px; border-radius:50%;
+  display:grid; place-items:center; background:var(--blue); color:#fff;
+  transition:transform .34s cubic-bezier(.34,1.3,.5,1), background .3s;
+}
+:root[data-theme=dark] .theme-toggle-thumb { transform:translateX(24px); background:var(--signal); color:#0b0f16 }
+.theme-icon { width:14px; height:14px; fill:none; stroke:currentColor; stroke-width:2; stroke-linecap:round; position:absolute; transition:opacity .2s, transform .34s }
+.theme-icon--moon { fill:currentColor; stroke:none }
+:root[data-theme=dark] .theme-icon--sun { opacity:0; transform:rotate(-70deg) scale(.6) }
+:root[data-theme=light] .theme-icon--moon,
+:root:not([data-theme=dark]) .theme-icon--moon { opacity:0; transform:rotate(70deg) scale(.6) }
+.theme-toggle:focus-visible { outline:3px solid var(--blue); outline-offset:4px; border-radius:999px }
+.header-cta { display:flex; align-items:center; gap:14px }
+.motion-toggle { width:56px; height:32px; padding:0 }
+:root[data-theme] .motion-toggle-thumb { background:var(--signal); color:var(--field); transform:translateX(24px) }
+:root[data-theme] .motion-toggle[aria-pressed=true] .motion-toggle-thumb { transform:translateX(0); background:var(--blue); color:#fff }
+.motion-icon { width:14px; height:14px; fill:currentColor; position:absolute; transition:opacity .2s, transform .34s }
+.motion-icon--pause { opacity:0; transform:scale(.6) }
+.motion-toggle[aria-pressed=true] .motion-icon--play { opacity:0; transform:scale(.6) }
+.motion-toggle[aria-pressed=true] .motion-icon--pause { opacity:1; transform:scale(1) }
+
+/* ── Pointer treatment ────────────────────────────────────────────────────── */
+/* Applied only once PointerCursor is actually running, so a JS failure can
+   never leave a visitor with no cursor at all. */
+.has-custom-cursor, .has-custom-cursor * { cursor:none !important }
+.cursor-dot, .cursor-ring {
+  position:fixed; top:0; left:0; z-index:200; pointer-events:none;
+  border-radius:50%; will-change:transform;
+}
+.cursor-dot {
+  width:6px; height:6px; background:var(--blue);
+  transition:width .18s, height .18s, background .2s, opacity .2s;
+}
+.cursor-ring {
+  width:32px; height:32px; border:1.5px solid var(--blue); opacity:.55;
+  transition:width .22s cubic-bezier(.2,.8,.3,1), height .22s cubic-bezier(.2,.8,.3,1),
+             opacity .2s, border-color .2s, background .2s;
+}
+.cursor-hot .cursor-ring { width:52px; height:52px; opacity:.9; background:color-mix(in oklab, var(--blue) 12%, transparent) }
+.cursor-hot .cursor-dot { width:4px; height:4px }
+.cursor-down .cursor-ring { width:24px; height:24px; opacity:1; background:color-mix(in oklab, var(--blue) 22%, transparent) }
+.cursor-down .cursor-dot { width:10px; height:10px }
+.cursor-idle .cursor-dot, .cursor-idle .cursor-ring { opacity:0 }
+:root[data-theme=dark] .cursor-dot { background:var(--signal) }
+:root[data-theme=dark] .cursor-ring { border-color:var(--signal) }
+:root[data-theme=dark] .cursor-hot .cursor-ring { background:color-mix(in oklab, var(--signal) 14%, transparent) }
+:root[data-theme=dark] .cursor-down .cursor-ring { background:color-mix(in oklab, var(--signal) 24%, transparent) }
+
+/* ── Page transitions ─────────────────────────────────────────────────────── */
+::view-transition-old(root) { animation:vt-out .22s cubic-bezier(.4,0,1,1) both }
+::view-transition-new(root) { animation:vt-in .32s cubic-bezier(0,0,.2,1) both }
+@keyframes vt-out { to { opacity:0; transform:translateY(-6px) } }
+@keyframes vt-in { from { opacity:0; transform:translateY(10px) } }
+/* The header and footer are continuous furniture — they should not slide. */
+.site-header { view-transition-name:site-header }
+.site-footer { view-transition-name:site-footer }
+::view-transition-group(site-header),
+::view-transition-group(site-footer) { animation-duration:.18s }
+
+/* ── Theme transition ─────────────────────────────────────────────────────── */
+/* Only the ground and furniture cross-fade; text stays crisp. */
+body, .site-header, .project-item, .contention-stage, .signature-plate,
+.lane, .token-row, .schematic-field, .theme-toggle-track {
+  transition:background-color .3s ease, border-color .3s ease, color .3s ease;
+}
+
+@media (prefers-reduced-motion:reduce) {
+  .live-field { display:none }
+  .cursor-dot, .cursor-ring { display:none }
+  ::view-transition-old(root), ::view-transition-new(root) { animation:none }
+  .theme-toggle-thumb, .theme-icon { transition:none }
+}
+@media (pointer:coarse) {
+  .live-field { display:none }
+}
+@media print { .live-field { display:none!important } }
+
+/* Brand + toggle + Resume + Menu get tight below ~420px. */
+@media (max-width:420px) {
+  .header-cta { gap:8px }
+  .theme-toggle, .theme-toggle-track { width:46px; height:28px }
+  .theme-toggle-thumb { width:20px; height:20px }
+  :root[data-theme=dark] .theme-toggle-thumb { transform:translateX(18px) }
+}
